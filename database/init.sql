@@ -1,0 +1,2 @@
+CREATE DATABASE blog_db;
+CREATE DATABASE logs_db;
