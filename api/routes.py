@@ -17,11 +17,7 @@ async def comments_dataset(
     login: str,
     connection: asyncpg.Connection = Depends(db_conn.get_db("authors_database")),
 ):
-    try:
-        user_id = await queries.get_user_id_by_login(login, connection)
-    except UserNotFoundException as e:
-        raise HTTPException(status_code=404, detail=e.to_dict())
-    
+    user_id = await queries.get_user_id_by_login(login, connection)
     data = await queries.get_comments_by_user_id(user_id, connection)
     return data
 
@@ -32,10 +28,6 @@ async def general_dataset(
     authors_conn: asyncpg.Connection = Depends(db_conn.get_db("authors_database")),
     logs_conn: asyncpg.Connection = Depends(db_conn.get_db("logs_database")),
 ):
-    try:
-        user_id = await queries.get_user_id_by_login(login, authors_conn)
-    except UserNotFoundException as e:
-        raise HTTPException(status_code=404, detail=e.to_dict())
-
+    user_id = await queries.get_user_id_by_login(login, authors_conn)
     data = await queries.get_general_logs_by_user_id(user_id, logs_conn)
     return data

@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from contextlib import asynccontextmanager
 import logging
 
+from exceptions import UserNotFoundException
 import db_conn
 from routes import api_router
 
@@ -22,3 +23,8 @@ app.include_router(api_router)
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+
+@app.exception_handler(UserNotFoundException)
+async def user_not_found_handler(request: Request, e: UserNotFoundException):
+    raise HTTPException(status_code=404, detail=e.to_dict())
