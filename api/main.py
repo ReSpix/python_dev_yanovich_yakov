@@ -2,8 +2,8 @@ from fastapi import FastAPI, HTTPException, Request
 from contextlib import asynccontextmanager
 import logging
 
-from exceptions import UserNotFoundException
 import db_conn
+from exceptions import UserNotFoundException
 from routes import api_router
 
 

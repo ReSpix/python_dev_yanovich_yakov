@@ -1,9 +1,8 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.routing import APIRouter
 import asyncpg
 import logging
 
-from exceptions import UserNotFoundException
 import db_conn
 import queries
 

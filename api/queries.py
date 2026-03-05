@@ -1,6 +1,4 @@
-from fastapi import Depends
 import asyncpg
-import db_conn
 
 from exceptions import UserNotFoundException
 
