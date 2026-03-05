@@ -2,19 +2,21 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import logging
 
-import db
+import db_conn
+from routes import api_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await db.create_pool("blog_db")
-    await db.create_pool("logs_db")
+    await db_conn.create_pool("authors_database")
+    await db_conn.create_pool("logs_database")
     yield
-    await db.close_all_pools()
+    await db_conn.close_all_pools()
 
 
 logging.basicConfig(level=logging.INFO)
 app = FastAPI(lifespan=lifespan)
+app.include_router(api_router)
 
 
 @app.get("/health")

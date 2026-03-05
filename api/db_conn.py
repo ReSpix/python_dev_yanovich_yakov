@@ -24,17 +24,20 @@ async def get_pool(db_name: str) -> asyncpg.Pool:
 
 
 async def create_pool(db_name: str):
-    pool = await asyncpg.create_pool(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=db_name,
-        min_size=1,
-        max_size=5,
-    )
-    _pools[db_name] = pool
-    logger.info(f"Database pool created: {db_name}")
+    try:
+        pool = await asyncpg.create_pool(
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=db_name,
+            min_size=1,
+            max_size=5,
+        )
+        _pools[db_name] = pool
+        logger.info(f"Database pool created: {db_name}")
+    except asyncpg.PostgresConnectionError:
+        logger.error(f"Unable to connect: {db_name}")
 
 
 async def close_pool(db_name):
