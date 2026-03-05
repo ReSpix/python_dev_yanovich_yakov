@@ -14,9 +14,16 @@ logger = logging.getLogger(__name__)
 
 @api_router.get("/comments")
 async def comments_dataset(
+    login: str,
     connection: asyncpg.Connection = Depends(db_conn.get_db("authors_database")),
 ):
-    pass
+    try:
+        user_id = await queries.get_user_id_by_login(login, connection)
+    except UserNotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.to_dict())
+    
+    data = await queries.get_comments_by_user_id(user_id, connection)
+    return data
 
 
 @api_router.get("/general")
