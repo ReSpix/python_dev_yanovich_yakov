@@ -46,6 +46,7 @@ async def create_session_factory(name: str):
     session_factories[name] = async_sessionmaker(
         bind=engines[name], autoflush=False, autocommit=False
     )
+    logging.info(f"Created database session: {name}")
 
 
 def get_db(db_name: DatabaseName):
