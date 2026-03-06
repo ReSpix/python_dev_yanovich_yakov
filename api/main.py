@@ -5,6 +5,7 @@ import logging
 from db import connection
 from exceptions import UserNotFoundException
 from routes import api_router
+from web.routes import web_router
 
 
 @asynccontextmanager
@@ -16,6 +17,7 @@ async def lifespan(app: FastAPI):
 logging.basicConfig(level=logging.INFO)
 app = FastAPI(lifespan=lifespan)
 app.include_router(api_router)
+app.include_router(web_router)
 
 
 @app.get("/health")

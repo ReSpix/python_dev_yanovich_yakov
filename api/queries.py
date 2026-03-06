@@ -55,3 +55,10 @@ async def get_general_logs_by_user_id(user_id: int, session: AsyncSession):
     result = await session.execute(query)
     rows = result.all()
     return [dict(row._mapping) for row in rows]
+
+
+async def get_all_users(session: AsyncSession):
+    query = select(User.login)
+    result = await session.execute(query)
+    rows = result.all()
+    return [row[0] for row in rows]

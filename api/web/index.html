@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Запросы</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-wrapper {
+            flex-grow: 1;
+            position: relative;
+            min-width: 200px;
+        }
+
+        input[list] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[list]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background-color: #28a745;
+        }
+        button.secondary:hover {
+            background-color: #218838;
+        }
+
+        .refresh-btn {
+            background-color: #6c757d;
+            padding: 10px;
+            min-width: 40px;
+        }
+        .refresh-btn:hover {
+            background-color: #5a6268;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        .status {
+            color: #666;
+            font-size: 0.9em;
+            margin-left: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Проверка пользователя</h1>
+
+    <div class="controls">
+        <div class="input-wrapper">
+            <input type="text" id="loginInput" list="userList" placeholder="Выберите или введите логин...">
+            <datalist id="userList">
+                <option value="" disabled>Загрузка...</option>
+            </datalist>
+        </div>
+        <button class="refresh-btn" onclick="loadUserList()" title="Обновить список">🔄</button>
+        <button onclick="fetchData('comments')" id="btnComments">Запросить Комментарии</button>
+        <button class="secondary" onclick="fetchData('general')" id="btnGeneral">Запросить Общее</button>
+    </div>
+
+    <div id="error-message" class="error"></div>
+    <div id="status-message" class="status"></div>
+    
+    <table id="resultTable">
+        <thead>
+            <tr id="table-header"></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+    </table>
+
+    <script>
+        // Загрузка списка пользователей при открытии страницы
+        document.addEventListener('DOMContentLoaded', loadUserList);
+
+        async function loadUserList() {
+            const datalist = document.getElementById('userList');
+            const input = document.getElementById('loginInput');
+            const statusMsg = document.getElementById('status-message');
+            const errorDiv = document.getElementById('error-message');
+
+            errorDiv.textContent = '';
+            datalist.innerHTML = '<option value="" disabled>Загрузка...</option>';
+            statusMsg.textContent = 'Обновление списка...';
+
+            try {
+                const response = await fetch('/api/user-list');
+
+                if (!response.ok) {
+                    throw new Error(`Ошибка HTTP: ${response.status}`);
+                }
+
+                // Эндпоинт возвращает массив строк: ["user1", "user2", "user3"]
+                const users = await response.json();
+
+                // Очищаем datalist
+                datalist.innerHTML = '';
+
+                if (!users || users.length === 0) {
+                    datalist.innerHTML = '<option value="" disabled>Нет пользователей в списке</option>';
+                    statusMsg.textContent = 'Список пуст, но вы можете ввести логин вручную';
+                    return;
+                }
+
+                // Заполняем выпадающий список (каждая строка — это логин)
+                users.forEach(login => {
+                    const option = document.createElement('option');
+                    option.value = login;  // Просто строка
+                    datalist.appendChild(option);
+                });
+
+                statusMsg.textContent = `Загружено ${users.length} пользователей`;
+
+            } catch (error) {
+                console.error(error);
+                errorDiv.textContent = `Ошибка загрузки списка: ${error.message}`;
+                datalist.innerHTML = '<option value="" disabled>Ошибка загрузки</option>';
+                statusMsg.textContent = 'Список не загружен, но вы можете ввести логин вручную';
+            }
+        }
+
+        async function fetchData(type) {
+            const login = document.getElementById('loginInput').value.trim();
+            const errorDiv = document.getElementById('error-message');
+            const statusMsg = document.getElementById('status-message');
+            const tableHeader = document.getElementById('table-header');
+            const tableBody = document.getElementById('table-body');
+
+            // Очистка предыдущих результатов и ошибок
+            errorDiv.textContent = '';
+            statusMsg.textContent = '';
+            tableHeader.innerHTML = '';
+            tableBody.innerHTML = '<tr><td colspan="100%" style="text-align:center">Загрузка...</td></tr>';
+
+            if (!login) {
+                errorDiv.textContent = 'Пожалуйста, введите или выберите логин.';
+                tableBody.innerHTML = '';
+                return;
+            }
+
+            try {
+                // Запрос к API с абсолютным путём от корня
+                const url = `/api/${type}?login=${encodeURIComponent(login)}`;
+                
+                statusMsg.textContent = `Запрос к /api/${type}...`;
+                
+                const response = await fetch(url);
+
+                if (response.status === 404) {
+                    const json = await response.json();
+                    throw new Error(`404 - ${json.detail.error}`);
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`Ошибка HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Если массив пустой или null
+                if (!data || (Array.isArray(data) && data.length === 0)) {
+                    tableBody.innerHTML = '<tr><td colspan="100%" style="text-align:center">Нет данных</td></tr>';
+                    statusMsg.textContent = `Запрос выполнен, но данных нет`;
+                    return;
+                }
+
+                // Генерация таблицы на основе JSON
+                renderTable(data);
+                statusMsg.textContent = `Запрос выполнен успешно. Найдено записей: ${Array.isArray(data) ? data.length : 1}`;
+
+            } catch (error) {
+                console.error(error);
+                errorDiv.textContent = `Ошибка при запросе: ${error.message}`;
+                statusMsg.textContent = '';
+                tableBody.innerHTML = '';
+            }
+        }
+
+        function renderTable(data) {
+            const tableHeader = document.getElementById('table-header');
+            const tableBody = document.getElementById('table-body');
+            
+            tableBody.innerHTML = ''; // Убираем "Загрузка..."
+
+            // Если пришел один объект, а не массив, оборачиваем его в массив
+            if (!Array.isArray(data)) {
+                data = [data];
+            }
+
+            // 1. Создаем заголовки таблицы на основе ключей первого объекта
+            const firstItem = data[0]; 
+            const columns = Object.keys(firstItem);
+
+            columns.forEach(key => {
+                const th = document.createElement('th');
+                // Красивое форматирование заголовков
+                th.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                tableHeader.appendChild(th);
+            });
+
+            // 2. Заполняем строки
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                columns.forEach(key => {
+                    const td = document.createElement('td');
+                    // Если значение объект или массив, выводим JSON строкой
+                    let value = item[key];
+                    if (typeof value === 'object' && value !== null) {
+                        value = JSON.stringify(value);
+                    }
+                    td.textContent = value !== null && value !== undefined ? value : '-';
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>

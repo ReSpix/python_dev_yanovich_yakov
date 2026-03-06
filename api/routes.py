@@ -32,3 +32,11 @@ async def general_dataset(
     user_id = await queries.get_user_id_by_login(login, authors_conn)
     data = await queries.get_general_logs_by_user_id(user_id, logs_conn)
     return data
+
+
+@api_router.get("/user-list")
+async def user_list(
+    connection: AsyncSession = Depends(connection.get_db(DatabaseName.AUTHORS)),
+):
+    data = await queries.get_all_users(connection)
+    return data
