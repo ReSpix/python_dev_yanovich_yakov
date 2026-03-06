@@ -26,14 +26,22 @@ services:
       DB_PORT: 5432
       DB_USER: ${DB_USER:-user}
       DB_PASSWORD: ${DB_PASSWORD:-password}
-    command: ["--host", "0.0.0.0", "--port", "8000"]
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
+      tests:
+        condition: service_completed_successfully
     networks:
       - app-network
+
+  tests:
+    build: ./api
+    container_name: test_runner
+    restart: no
+    command: ["pytest", "-v", "--tb=short", "--disable-warnings"]
 
 volumes:
   pgdata:
