@@ -2,17 +2,15 @@ from fastapi import FastAPI, HTTPException, Request
 from contextlib import asynccontextmanager
 import logging
 
-import db_conn
+from db import connection
 from exceptions import UserNotFoundException
 from routes import api_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await db_conn.create_pool("authors_database")
-    await db_conn.create_pool("logs_database")
+    await connection.init_db_engines()
     yield
-    await db_conn.close_all_pools()
 
 
 logging.basicConfig(level=logging.INFO)
