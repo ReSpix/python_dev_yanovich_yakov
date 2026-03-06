@@ -26,7 +26,7 @@ services:
       DB_PORT: 5432
       DB_USER: ${DB_USER:-user}
       DB_PASSWORD: ${DB_PASSWORD:-password}
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -41,6 +41,7 @@ services:
     build: ./api
     container_name: test_runner
     restart: no
+    entrypoint: []
     command: ["pytest", "-v", "--tb=short", "--disable-warnings"]
 
 volumes:
